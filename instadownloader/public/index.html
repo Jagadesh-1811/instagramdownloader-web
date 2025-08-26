@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaDownloader - Download Instagram Videos & Photos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        /* Light theme colors */
+        body.light-theme {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            color: #1e293b;
+        }
+        
+        body.light-theme .bg-primary { background-color: #ffffff; }
+        body.light-theme .bg-secondary { background-color: #f8fafc; }
+        body.light-theme .bg-tertiary { background-color: #f1f5f9; }
+        body.light-theme .text-primary { color: #1e293b; }
+        body.light-theme .text-secondary { color: #475569; }
+        body.light-theme .text-muted { color: #64748b; }
+        body.light-theme .border-custom { border-color: #e2e8f0; }
+        body.light-theme .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        
+        /* Dark theme colors */
+        body.dark-theme {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+        }
+        
+        body.dark-theme .bg-primary { background-color: #0f172a; }
+        body.dark-theme .bg-secondary { background-color: #1e293b; }
+        body.dark-theme .bg-tertiary { background-color: #334155; }
+        body.dark-theme .text-primary { color: #ffffff; }
+        body.dark-theme .text-secondary { color: #e2e8f0; }
+        body.dark-theme .text-muted { color: #94a3b8; }
+        body.dark-theme .border-custom { border-color: #475569; }
+        body.dark-theme .glass-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+        }
+
+        .accent-bg { background-color: #8b5cf6; }
+        .accent-bg:hover { background-color: #7c3aed; }
+        .success-bg { background-color: #10b981; }
+        .error-bg { background-color: #ef4444; }
+
+        .spinner {
+            border: 3px solid rgba(139, 92, 246, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #8b5cf6;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            z-index: 50;
+            border-radius: 50px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .input-valid {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .input-invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #8b5cf6;
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            animation: progressPulse 2s infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @media (max-width: 640px) {
+            .theme-toggle {
+                position: static !important;
+                margin-bottom: 1.5rem;
+                top: auto;
+                right: auto;
+            }
+        }
+    </style>
+</head>
+<body class="dark-theme min-h-screen">
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle bg-secondary border-2 border-custom" id="themeToggle" title="Toggle Theme">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header Section -->
+        <header class="text-center mb-12">
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="relative">
+                </div>
+                <h1 class="text-5xl lg:text-6xl font-bold tracking-tight bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">InstaDownloader</h1>
+            </div>
+            <p class="text-muted text-lg lg:text-xl max-w-2xl mx-auto">Download Instagram videos, reels, photos, and stories with ease. Fast, free, and secure.</p>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <div class="glass-card p-8 rounded-3xl shadow-2xl mb-8">
+                <div class="flex flex-col sm:flex-row gap-4 mb-4">
+                    <div class="flex-grow relative">
+                        <input 
+                            type="text" 
+                            id="urlInput"
+                            placeholder="Paste Instagram URL here (posts, reels, stories, IGTV)..." 
+                            class="w-full bg-tertiary text-primary px-5 py-4 rounded-xl border-2 border-custom focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300 text-lg"
+                        >
+                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted hidden" id="urlValidationIcon">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <button 
+                        id="downloadBtn"
+                        class="accent-bg text-white font-bold py-4 px-8 rounded-xl flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg text-lg"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>Download</span>
+                    </button>
+                </div>
+                
+                <div class="text-sm text-muted">
+                    <span class="font-medium">Supported formats:</span> 
+                    <span class="italic">instagram.com/p/..., instagram.com/reel/..., instagram.com/tv/...</span>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="result" class="mb-8"></div>
+
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card p-6 rounded-2xl text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-primary mb-2">High Quality</h3>
+                    <p class="text-muted text-sm">Download in original quality, no compression</p>
+                </div>
+                
+                <div class="glass-card p-6 rounded-2xl text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                            <path d="m9 12 2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-primary mb-2">Secure & Private</h3>
+                    <p class="text-muted text-sm">No data stored, completely private</p>
+                </div>
+                
+                <div class="glass-card p-6 rounded-2xl text-center">
+                    <div class="w-12 h-12 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-primary mb-2">Free Forever</h3>
+                    <p class="text-muted text-sm">No registration, no fees, completely free</p>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="glass-card p-8 rounded-2xl shadow-lg">
+                <h3 class="font-semibold text-primary mb-6 text-2xl flex items-center gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    How to use InstaDownloader
+                </h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <ul class="text-muted text-base space-y-4">
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-sm font-bold text-purple-600">1</span>
+                            </div>
+                            <div>
+                                <div class="font-medium text-secondary mb-1">Copy Instagram URL</div>
+                                <div class="text-sm">Go to Instagram and copy the link from posts, reels, IGTV, or stories</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-sm font-bold text-purple-600">2</span>
+                            </div>
+                            <div>
+                                <div class="font-medium text-secondary mb-1">Paste and Download</div>
+                                <div class="text-sm">Paste the URL in the input field above and click Download</div>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul class="text-muted text-base space-y-4">
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-sm font-bold text-purple-600">3</span>
+                            </div>
+                            <div>
+                                <div class="font-medium text-secondary mb-1">Wait for Processing</div>
+                                <div class="text-sm">Our servers will fetch and process your content quickly</div>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <span class="text-sm font-bold text-purple-600">4</span>
+                            </div>
+                            <div>
+                                <div class="font-medium text-secondary mb-1">Save to Device</div>
+                                <div class="text-sm">Click the download button to save the content to your device</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center mt-16 text-muted">
+            <p class="text-base">&copy; 2025 InstaDownloader. For educational and personal use only.</p>
+            <p class="mt-2 text-base">Please respect copyright and Instagram's terms of service.</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const urlInput = document.getElementById('urlInput');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resultDiv = document.getElementById('result');
+        const themeToggle = document.getElementById('themeToggle');
+        const urlValidationIcon = document.getElementById('urlValidationIcon');
+        const body = document.body;
+        
+        // Backend URL - Change this to match your server
+        const BACKEND_URL = 'http://localhost:5000/api/download';
+        
+        // Theme management
+        let isDarkMode = localStorage.getItem('theme') !== 'light';
+        
+        // Initialize
+        updateTheme();
+        
+        // Theme toggle
+        themeToggle.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            updateTheme();
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        });
+
+        function updateTheme() {
+            if (isDarkMode) {
+                body.className = 'dark-theme min-h-screen';
+                themeToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                `;
+                themeToggle.title = 'Switch to Light Mode';
+            } else {
+                body.className = 'light-theme min-h-screen';
+                themeToggle.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-primary">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                `;
+                themeToggle.title = 'Switch to Dark Mode';
+            }
+        }
+
+        // URL validation
+        function isValidInstagramUrl(url) {
+            const patterns = [
+                /^https?:\/\/(www\.)?instagram\.com\/p\/[A-Za-z0-9_-]+/,
+                /^https?:\/\/(www\.)?instagram\.com\/reel\/[A-Za-z0-9_-]+/,
+                /^https?:\/\/(www\.)?instagram\.com\/tv\/[A-Za-z0-9_-]+/,
+                /^https?:\/\/(www\.)?instagram\.com\/stories\/[A-Za-z0-9._-]+\/[0-9]+/
+            ];
+            return patterns.some(pattern => pattern.test(url));
+        }
+
+        // URL input validation
+        urlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            urlValidationIcon.classList.add('hidden');
+            
+            if (url) {
+                if (isValidInstagramUrl(url)) {
+                    this.classList.add('input-valid');
+                    this.classList.remove('input-invalid');
+                    urlValidationIcon.classList.remove('hidden');
+                    urlValidationIcon.innerHTML = '<path d="M20 6 9 17l-5-5"/>';
+                    urlValidationIcon.style.stroke = '#10b981';
+                } else {
+                    this.classList.add('input-invalid');
+                    this.classList.remove('input-valid');
+                    urlValidationIcon.classList.remove('hidden');
+                    urlValidationIcon.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+                    urlValidationIcon.style.stroke = '#ef4444';
+                }
+            } else {
+                this.classList.remove('input-valid', 'input-invalid');
+            }
+        });
+
+        // Event listeners
+        downloadBtn.addEventListener('click', handleDownload);
+        urlInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                handleDownload();
+            }
+        });
+
+        // Main download function
+        async function handleDownload() {
+            const url = urlInput.value.trim();
+
+            // Clear previous results
+            resultDiv.innerHTML = '';
+
+            // Validate input
+            if (!url) {
+                showError("Please paste an Instagram URL in the input field.");
+                return;
+            }
+
+            if (!isValidInstagramUrl(url)) {
+                showError("Please enter a valid Instagram URL (posts, reels, stories, or IGTV).");
+                return;
+            }
+
+            // Show loading
+            showLoading();
+
+            try {
+                const response = await fetch(BACKEND_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Something went wrong on the server.');
+                }
+
+                // Show success with download link
+                showSuccess(data.thumbnailUrl || 'https://via.placeholder.com/300x300/374151/FFFFFF?text=Instagram', data.downloadUrl, data.type || 'media');
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                showError(error.message || 'Failed to process the request. Please try again.');
+            }
+        }
+
+        // UI Helper Functions
+        function showLoading() {
+            resultDiv.innerHTML = `
+                <div class="bg-secondary p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center">
+                    <div class="spinner mb-4"></div>
+                    <p class="text-secondary">Fetching your content, please wait...</p>
+                    <div class="progress-bar mt-4 w-full max-w-xs">
+                        <div class="progress-fill" style="width: 60%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            resultDiv.innerHTML = `
+                <div class="border-2 border-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-lg text-center">
+                    <div class="flex items-center justify-center mb-2 text-red-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="15" y1="9" x2="9" y2="15"/>
+                            <line x1="9" y1="9" x2="15" y2="15"/>
+                        </svg>
+                        <span class="ml-2 font-semibold">Error</span>
+                    </div>
+                    <p class="text-red-600">${message}</p>
+                </div>
+            `;
+        }
+
+        function showSuccess(thumbnail, downloadLink, type) {
+            resultDiv.innerHTML = `
+                <div class="bg-secondary p-6 rounded-2xl shadow-lg animate-fade-in">
+                    <p class="text-center text-lg font-semibold mb-4 text-primary">Your ${type} is ready!</p>
+                    <div class="flex flex-col items-center">
+                        <img src="${thumbnail}" alt="Thumbnail" class="w-full max-w-sm h-auto rounded-lg mb-4 shadow-md" 
+                             onerror="this.src='https://via.placeholder.com/300x300/374151/FFFFFF?text=Instagram'">
+                        <div class="flex gap-3">
+                            <a href="${downloadLink}" 
+                               class="accent-bg text-white font-bold py-3 px-6 rounded-lg transition duration-300 hover:scale-105 shadow-lg flex items-center gap-2"
+                               download target="_blank">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Download Now
+                            </a>
+                            <button onclick="copyToClipboard('${downloadLink}')" 
+                                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                </svg>
+                                Copy Link
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show temporary success message
+                const originalContent = resultDiv.innerHTML;
+                const successMsg = resultDiv.querySelector('p');
+                const originalText = successMsg.textContent;
+                successMsg.textContent = 'Link copied to clipboard!';
+                successMsg.className = successMsg.className + ' text-green-600';
+                
+                setTimeout(() => {
+                    successMsg.textContent = originalText;
+                    successMsg.className = successMsg.className.replace(' text-green-600', '');
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy link to clipboard');
+            });
+        }
+    </script>
+</body>
+</html>
