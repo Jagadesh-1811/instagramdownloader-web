@@ -2,8 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="6F1828RVpCSgJf19LkHr0hdXCUH7OnXlWn8u4CX-960" />
-    <title>InstaDownloader - Download Instagram Videos & Photos</title>
+
+    <!-- 
+      ============================================================
+      == 1. SEO: MAIN TITLE FOR GOOGLE SEARCH (The Blue Link) ==
+      ============================================================
+    -->
+    <title>InstaDownloader - Download Instagram Videos, Photos & Reels</title>
+
+    <!-- 
+      ===================================================================
+      == 2. SEO: DESCRIPTION FOR GOOGLE SEARCH (The Snippet Below the Title) ==
+      ===================================================================
+    -->
+    <meta name="description" content="Easily download Instagram videos, photos, Reels, and Stories in high quality. Our free and secure downloader is fast, simple, and requires no login.">
+
+    <!-- 
+      ======================================================================
+      == 3. SEO: STRUCTURED DATA (JSON-LD) - ADVANCED INFO FOR GOOGLE ==
+      ======================================================================
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "InstaDownloader",
+      "operatingSystem": "Web",
+      "applicationCategory": "MultimediaApplication",
+      "description": "A free web-based tool to download Instagram content like videos, photos, Reels, and Stories directly to your device. The service is fast, secure, and provides high-quality downloads.",
+      "featureList": [
+        "Download Instagram Videos",
+        "Download Instagram Photos",
+        "Download Instagram Reels",
+        "Download Instagram Stories",
+        "High-Quality Downloads",
+        "Anonymous and Secure",
+        "No Login Required",
+        "Free to Use"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- Styling and Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -299,8 +346,8 @@
         const urlValidationIcon = document.getElementById('urlValidationIcon');
         const body = document.body;
         
-        // Backend URL - Change this to match your server
-        const BACKEND_URL = 'http://localhost:5000/api/download';
+        // Backend URL - Updated to your Render service
+        const BACKEND_URL = 'https://instagramdownloader-web.onrender.com/api/download';
         
         // Theme management
         let isDarkMode = localStorage.getItem('theme') !== 'light';
@@ -486,9 +533,14 @@
         }
 
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                // Show temporary success message
-                const originalContent = resultDiv.innerHTML;
+            // Use the older 'execCommand' for broader compatibility in iFrames
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
                 const successMsg = resultDiv.querySelector('p');
                 const originalText = successMsg.textContent;
                 successMsg.textContent = 'Link copied to clipboard!';
@@ -498,12 +550,13 @@
                     successMsg.textContent = originalText;
                     successMsg.className = successMsg.className.replace(' text-green-600', '');
                 }, 2000);
-            }).catch(() => {
-                alert('Failed to copy link to clipboard');
-            });
+
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
 
 </html>
-
